@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'service/exchangeService.dart';
+import 'model/exchangeModel.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,8 +27,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final ExchangeService _service = ExchangeService();
-
-  double? eurToBrl;
+  ExchangeModel? cotacao;
+  double? menorValor; // Armazenar o menor valor separadamente
   bool loading = true;
   String? error;
 
@@ -40,8 +41,15 @@ class _HomePageState extends State<HomePage> {
   Future<void> carregarCotacao() async {
     try {
       final result = await _service.getEurToBrl();
+
       setState(() {
-        eurToBrl = result;
+        // Atualizar menor valor se necessário
+        if (menorValor == null || result.brl < menorValor!) {
+          menorValor = result.brl;
+        }
+
+        // Criar cotação com o menor valor
+        cotacao = result.copyWith(lowestValue: menorValor);
         loading = false;
       });
     } catch (e) {
@@ -55,19 +63,44 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Teste EUR → BRL')),
+      appBar: AppBar(title: const Text('Cotação EUR → BRL')),
       body: Center(
         child: loading
             ? const CircularProgressIndicator()
             : error != null
             ? Text(error!, style: const TextStyle(color: Colors.red))
-            : Text(
-                '1 EUR = ${eurToBrl!.toStringAsFixed(2)} BRL',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '1 EUR = ${cotacao!.brl.toStringAsFixed(2)} BRL',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Data: ${cotacao!.dataFormatada}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.green,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    'Menor valor: ${cotacao!.lowestValue?.toStringAsFixed(2)} BRL em 07/12/2025',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
               ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() => loading = true);
+          carregarCotacao();
+        },
+        child: const Icon(Icons.refresh),
       ),
     );
   }
