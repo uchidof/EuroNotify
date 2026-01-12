@@ -51,6 +51,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> carregarCotacao() async {
+    print('[app]: CARREGANDO COTACAO...');
     try {
       final result = await _service.getEurToBrl();
 
@@ -64,6 +65,8 @@ class _HomePageState extends State<HomePage> {
         cotacao = result.copyWith(lowestValue: menorValor);
         loading = false;
       });
+
+      print('[app]: COTACAO ATUALIZADA');
     } catch (e) {
       setState(() {
         error = e.toString();
