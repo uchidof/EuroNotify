@@ -4,6 +4,11 @@ import 'service/notificationService.dart';
 import 'model/exchangeModel.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  //init Notifications
+  NotificationService().initNotification();
+
   runApp(const MyApp());
 }
 
@@ -39,15 +44,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     carregarCotacao();
-    verificarNotificacoes();
-  }
-
-  Future<void> verificarNotificacoes() async {
-    final hasNotifications =
-        await NotificationService.hasScheduledNotifications();
-    setState(() {
-      notificacoesAtivas = hasNotifications;
-    });
   }
 
   Future<void> carregarCotacao() async {
@@ -91,43 +87,6 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         horarioSelecionado = picked;
       });
-    }
-  }
-
-  Future<void> ativarNotificacoes() async {
-    await NotificationService.scheduleDailyNotification(
-      id: 1,
-      title: 'Cotação EUR → BRL',
-      body: 'Confira a cotação atualizada do Euro!',
-      hour: horarioSelecionado.hour,
-      minute: horarioSelecionado.minute,
-    );
-
-    setState(() {
-      notificacoesAtivas = true;
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Notificações ativadas para ${horarioSelecionado.hour.toString().padLeft(2, '0')}:${horarioSelecionado.minute.toString().padLeft(2, '0')}',
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> desativarNotificacoes() async {
-    await NotificationService.cancelAllNotifications();
-    setState(() {
-      notificacoesAtivas = false;
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Notificações desativadas')));
     }
   }
 
@@ -217,30 +176,19 @@ class _HomePageState extends State<HomePage> {
                               ],
                             ),
                             const SizedBox(height: 16),
+                            //NOTIFICACOES
                             SizedBox(
                               width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: notificacoesAtivas
-                                    ? desativarNotificacoes
-                                    : ativarNotificacoes,
-                                icon: Icon(
-                                  notificacoesAtivas
-                                      ? Icons.notifications_off
-                                      : Icons.notifications_active,
-                                ),
-                                label: Text(
-                                  notificacoesAtivas
-                                      ? 'Desativar Notificações'
-                                      : 'Ativar Notificações',
-                                ),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  NotificationService().showNotification(
+                                    title: 'Teste',
+                                    body: 'Testando notificacao',
+                                  );
+                                },
+                                child: Text("NOTIFICAR"),
                                 style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  backgroundColor: notificacoesAtivas
-                                      ? Colors.red
-                                      : Colors.blue,
-                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.blue,
                                 ),
                               ),
                             ),
