@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
   bool loading = true;
   String? error;
   bool notificacoesAtivas = false;
-  TimeOfDay horarioSelecionado = const TimeOfDay(hour: 20, minute: 30);
+  TimeOfDay horarioSelecionado = const TimeOfDay(hour: 10, minute: 58);
 
   @override
   void initState() {
@@ -164,7 +164,9 @@ class _HomePageState extends State<HomePage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                //SELECAO DO HORARIO
                                 const Text('Horário:'),
+
                                 TextButton.icon(
                                   onPressed: selecionarHorario,
                                   icon: const Icon(Icons.access_time),
@@ -180,6 +182,7 @@ class _HomePageState extends State<HomePage> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
+                                //NOTIFICAR AGORA
                                 onPressed: () {
                                   NotificationService().showNotification(
                                     title: 'Teste',
@@ -189,6 +192,26 @@ class _HomePageState extends State<HomePage> {
                                 child: Text("NOTIFICAR"),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                //Marcar Horario
+                                onPressed: () {
+                                  NotificationService().scheduleNotification(
+                                    title: 'Teste de Horario',
+                                    body: 'Notificando no Horario',
+                                    hour: horarioSelecionado.hour + 3,
+                                    minute: horarioSelecionado.minute,
+                                  );
+                                },
+                                child: Text("Marcar Horario"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.lightGreenAccent,
+                                  foregroundColor: Colors.black,
                                 ),
                               ),
                             ),
@@ -208,14 +231,6 @@ class _HomePageState extends State<HomePage> {
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Notificações ativas às ${horarioSelecionado.hour.toString().padLeft(2, '0')}:${horarioSelecionado.minute.toString().padLeft(2, '0')}',
-                                        style: TextStyle(
-                                          color: Colors.green.shade700,
-                                        ),
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),

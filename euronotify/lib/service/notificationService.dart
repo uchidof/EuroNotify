@@ -1,4 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 class NotificationService {
   final notificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -10,6 +13,12 @@ class NotificationService {
   //INITIALIZE SERVICE
   Future<void> initNotification() async {
     if (_isInitialized) return; // prevent re-initialization
+
+    //init Timezone handling
+    tz.initializeTimeZones();
+    final String currentTimeZone =
+        (await FlutterTimezone.getLocalTimezone()) as String;
+    tz.setLocalLocation(tz.getLocation(currentTimeZone));
 
     //Android Initial settings
     const initSettingsAndroid = AndroidInitializationSettings(
@@ -29,7 +38,7 @@ class NotificationService {
         >()
         ?.requestNotificationsPermission();
 
-    _isInitialized = true; // ✅ Marcar como inicializado APÓS sucesso
+    _isInitialized = true;
     print('[app]: Notificações inicializadas com sucesso');
   }
 
@@ -56,5 +65,61 @@ class NotificationService {
     return notificationsPlugin.show(id, title, body, notificationDetails());
   }
 
-  //ON NOTI TAP
+  //SCHEDULE NOTIFICATION
+  Future<void> scheduleNotification({
+    int id = 1,
+    required String title,
+    required String body,
+    required int hour,
+    required int minute,
+  }) async {
+    //Get the current *date/time* in device local timezone
+    final now = tz.TZDateTime.now(tz.local);
+    print('[app] Timezone local: ${tz.local.name}');
+    print('[app] Horário atual (now):');
+    print(
+      '[app] Horario: ${now.hour}:${now.minute}:${now.second} - ${now.timeZoneName}',
+    );
+
+    //Create a *date/time* for today at the specified hour/min
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    print('\n[app] Data Selecionada:');
+    print(
+      '[app] Horario: ${scheduledDate.hour}:${scheduledDate.minute}:${scheduledDate.second} - ${scheduledDate.timeZoneName}',
+    );
+
+    //Schedule the notification
+    await notificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledDate,
+      notificationDetails(),
+
+      //Android specific: Notifications in low power mode
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+
+      //Make notification repeat DAILY at the same time
+      //matchDateTimeComponents: DateTimeComponents.time,
+    );
+
+    print('[app]: NOTIFICACAO FOI AGENDADA ');
+  }
+
+  //Cancel all notifications
+  Future<void> cancelAllNotifications() async {
+    await notificationsPlugin.cancelAll();
+  }
 }
